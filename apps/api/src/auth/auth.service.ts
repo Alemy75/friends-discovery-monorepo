@@ -56,4 +56,23 @@ export class AuthService {
     const u = await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
     return u.role as Role;
   }
+
+  async requestReset(email: string): Promise<void> {
+    const identity = await this.prisma.authIdentity.findUnique({
+      where: { provider_identifier: { provider: 'password', identifier: email } },
+    });
+    if (identity) await this.verification.issueResetToken(email);
+    // Always resolve — do not reveal whether the email exists.
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<void> {
+    const email = await this.verification.consumeResetToken(token);
+    if (!email) throw new BadRequestException('Invalid or expired token');
+    const secretHash = await this.passwords.hash(newPassword);
+    const identity = await this.prisma.authIdentity.update({
+      where: { provider_identifier: { provider: 'password', identifier: email } },
+      data: { secretHash },
+    });
+    await this.tokens.revokeAll(identity.userId);
+  }
 }

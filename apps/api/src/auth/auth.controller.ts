@@ -5,6 +5,8 @@ import { AuthService } from './auth.service';
 import { TokenService } from './token.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { ResetDto } from './dto/reset.dto';
+import { ResetRequestDto } from './dto/reset-request.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 
 @Controller('auth')
@@ -62,5 +64,17 @@ export class AuthController {
     const token = req.cookies?.['refresh_token'];
     if (token) await this.tokens.revoke(String(token).split('.')[0]);
     res.clearCookie('refresh_token', { path: '/api/v1/auth' });
+  }
+
+  @Post('password/reset-request')
+  @HttpCode(204)
+  async resetRequest(@Body() dto: ResetRequestDto): Promise<void> {
+    await this.auth.requestReset(dto.email);
+  }
+
+  @Post('password/reset')
+  @HttpCode(204)
+  async reset(@Body() dto: ResetDto): Promise<void> {
+    await this.auth.resetPassword(dto.token, dto.password);
   }
 }
