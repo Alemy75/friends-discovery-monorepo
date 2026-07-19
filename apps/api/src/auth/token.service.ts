@@ -40,6 +40,9 @@ export class TokenService {
     const refreshToken = `${sessionId}.${secret}`;
     await this.persist(sessionId, { userId, tokenHash: this.hash(refreshToken) });
     await this.redis.client.sadd(this.userKey(userId), sessionId);
+    // Keep the per-user session-index key from growing unbounded forever —
+    // refresh it to the same TTL as the sessions it tracks.
+    await this.redis.client.expire(this.userKey(userId), this.config.refreshTtl);
     return { refreshToken, sessionId };
   }
 

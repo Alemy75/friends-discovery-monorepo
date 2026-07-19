@@ -57,6 +57,20 @@ export class AuthService {
     return u.role as Role;
   }
 
+  /**
+   * Re-checks account status for a rotated refresh session. If the account is
+   * no longer active, revokes the given session and rejects — a blocked user
+   * must not be able to mint a fresh access token via refresh.
+   */
+  async activeUserRole(userId: string, sessionId: string): Promise<Role> {
+    const u = await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
+    if (u.status !== 'active') {
+      await this.tokens.revoke(sessionId);
+      throw new UnauthorizedException('Account blocked');
+    }
+    return u.role as Role;
+  }
+
   async me(userId: string): Promise<MeResponse> {
     const user = await this.prisma.user.findUniqueOrThrow({
       where: { id: userId },

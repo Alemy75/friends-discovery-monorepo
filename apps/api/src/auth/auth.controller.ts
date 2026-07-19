@@ -62,9 +62,9 @@ export class AuthController {
     const token = req.cookies?.['refresh_token'];
     if (!token) throw new UnauthorizedException('No refresh token');
     const rotated = await this.tokens.rotate(token);
-    const user = await this.auth.userRole(rotated.userId);
+    const role = await this.auth.activeUserRole(rotated.userId, rotated.sessionId);
     res.cookie('refresh_token', rotated.refreshToken, this.cookieOpts());
-    return { accessToken: this.tokens.signAccess(rotated.userId, user) };
+    return { accessToken: this.tokens.signAccess(rotated.userId, role) };
   }
 
   @Public()

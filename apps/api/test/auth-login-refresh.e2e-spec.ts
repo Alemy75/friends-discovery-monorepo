@@ -3,6 +3,7 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 import request from 'supertest';
 import { startPostgres, startRedis, StartedPostgres, StartedRedis } from './testcontainers';
+import { PrismaService } from '../src/prisma/prisma.service';
 
 describe('Auth login/refresh (e2e)', () => {
   let pg: StartedPostgres; let redis: StartedRedis; let app: INestApplication;
@@ -48,5 +49,29 @@ describe('Auth login/refresh (e2e)', () => {
   it('rejects bad credentials', async () => {
     await register('bad@b.com');
     await agent().post('/api/v1/auth/login').send({ email: 'bad@b.com', password: 'wrong' }).expect(401);
+  });
+
+  it('normalizes email casing between register and login', async () => {
+    await agent().post('/api/v1/auth/register').send({ email: 'Mixed@Case.COM', password: 'password123' }).expect(201);
+    const login = await agent()
+      .post('/api/v1/auth/login')
+      .send({ email: 'mixed@case.com', password: 'password123' })
+      .expect(200);
+    expect(login.body.accessToken).toBeTruthy();
+  });
+
+  it('rejects refresh once the account is blocked, revoking the session', async () => {
+    const email = 'blocked@b.com';
+    await register(email);
+    const login = await agent().post('/api/v1/auth/login').send({ email, password: 'password123' }).expect(200);
+    const cookie = login.headers['set-cookie'][0];
+
+    const prisma = app.get(PrismaService);
+    const identity = await prisma.authIdentity.findUniqueOrThrow({
+      where: { provider_identifier: { provider: 'password', identifier: email } },
+    });
+    await prisma.user.update({ where: { id: identity.userId }, data: { status: 'blocked' } });
+
+    await agent().post('/api/v1/auth/refresh').set('Cookie', cookie).expect(401);
   });
 });
