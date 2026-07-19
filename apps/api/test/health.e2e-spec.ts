@@ -15,6 +15,8 @@ describe('Health (e2e)', () => {
     process.env.DATABASE_URL = pg.url;
     process.env.REDIS_URL = redis.url;
     process.env.NODE_ENV = 'test';
+    process.env.JWT_SECRET = 'x'.repeat(32);
+    process.env.APP_URL = 'http://localhost:5173';
     // AppConfigModule validates process.env eagerly at import time (see
     // prisma.e2e-spec.ts), so AppModule must be imported *after* the env vars
     // above are set — otherwise it binds to a stale/missing DATABASE_URL /
