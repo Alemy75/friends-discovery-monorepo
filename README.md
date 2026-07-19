@@ -1,33 +1,53 @@
 # friends.ai
 
-Демо-фронтенд приложения для знакомств и поиска друзей — для одиночек и пар.
-React + Vite + TypeScript, SPA, без бэкенда (данные моковые, «сессия» в `localStorage`).
+Fullstack-приложение для знакомств и поиска друзей — для одиночек и пар.
+Первый город — Ярославль; бэкенд спроектирован под масштабирование на другие города.
 
-## Запуск
+Монорепо (npm workspaces):
 
-```bash
-npm install
-npm run dev      # http://localhost:5173
-npm run build    # прод-сборка в dist/
+```
+apps/
+  api/                 # бэкенд: NestJS + TypeScript (модульный монолит)
+packages/
+  contracts/           # общие типы/enum для FE и BE (@friends-ai/contracts)
+reference/
+  web-reference/       # исходный фронтенд-набросок (React+Vite+TS) — дизайн-референс
+docs/superpowers/
+  specs/               # архитектурный дизайн бэкенда
+  plans/               # планы реализации
 ```
 
-## Что внутри
+Стек бэкенда: NestJS · PostgreSQL (Prisma) · Redis · Socket.IO · S3-совместимое хранилище.
+Подробности — в [архитектурном дизайне](docs/superpowers/specs/2026-07-19-backend-architecture-design.md).
 
-Полный флоу:
+## Запуск (локальная разработка)
 
-1. **Лендинг** — hero, типы аккаунтов, «как это работает».
-2. **Auth** — вход / регистрация (данные не отправляются).
-3. **Онбординг** — тип аккаунта (Single / Пара), профиль, интересы и цели.
-4. **Поиск** — свайп-карточки (Tinder-style): перетаскивание, «Интересно / Пропустить», кольцо совместимости. Взаимный интерес → мэтч.
-5. **Мэтчи** — список совпадений + чат с авто-ответами.
-6. **Профиль** — статистика, редактирование интересов и «о себе».
+Поднять инфраструктуру и API в Docker:
 
-## Дизайн
+```bash
+cp .env.example .env
+docker compose up -d --build
+curl http://localhost:3000/health        # {"status":"ok", database up, redis up}
+```
 
-База — дизайн-система в духе shadcn/ui (чистые белые карточки, hairline-границы,
-тугая типографика Geist, компактная плотность). Поверх — тёплый **коралловый акцент**
-(`#fb5d5d → #ff8e72`): градиентные кнопки, цветные аватары, кольца совместимости
-и «мэтч»-моменты. Красный `#e7000b` зарезервирован только за деструктивными действиями.
+Только зависимости (postgres/redis/minio) в Docker, а API — локально с hot-reload:
 
-Токены объявлены в [`src/index.css`](src/index.css) (`@theme`), UI-примитивы —
-в [`src/components/ui`](src/components/ui).
+```bash
+cp .env.example .env      # раскомментируй блок host-based dev в .env
+docker compose up -d postgres redis minio
+npm install
+npm run start:dev -w @friends-ai/api      # http://localhost:3000/api/v1
+```
+
+## Тесты
+
+```bash
+npm test                                  # unit-тесты всех пакетов
+npm run test:e2e -w @friends-ai/api       # e2e на реальных Postgres/Redis (Testcontainers — нужен Docker)
+```
+
+## Дизайн-референс
+
+Исходный SPA-набросок (лендинг, auth, онбординг, свайп-поиск, мэтчи+чат, профиль) сохранён
+в [`reference/web-reference/`](reference/web-reference/) как ориентир по домену и визуалу.
+Продуктовый фронтенд переписывается начисто отдельно.

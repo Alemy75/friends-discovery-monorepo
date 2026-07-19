@@ -37,3 +37,6 @@ coverage/
 
 # claude code local settings
 .claude/settings.local.json
+
+# subagent-driven-development scratch (progress ledger)
+.superpowers/
