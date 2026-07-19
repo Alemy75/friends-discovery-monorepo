@@ -15,7 +15,8 @@ describe('validateEnv', () => {
   });
 
   it('throws when a required var is missing', () => {
-    const { DATABASE_URL, ...rest } = valid;
+    const rest: Partial<typeof valid> = { ...valid };
+    delete rest.DATABASE_URL;
     expect(() => validateEnv(rest)).toThrow(/DATABASE_URL/);
   });
 
