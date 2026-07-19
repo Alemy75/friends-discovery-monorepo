@@ -1,5 +1,6 @@
 import { Test } from '@nestjs/testing';
 import { ConsoleLogger, INestApplication, ValidationPipe } from '@nestjs/common';
+import cookieParser from 'cookie-parser';
 import request from 'supertest';
 import { startPostgres, startRedis, StartedPostgres, StartedRedis } from './testcontainers';
 
@@ -37,6 +38,10 @@ describe('Auth password reset (e2e)', () => {
     // token via Logger, so restore a real ConsoleLogger here — it writes
     // through process.stdout.write, which the spy above captures.
     app.useLogger(new ConsoleLogger());
+    // Mirrors auth-login-refresh.e2e-spec.ts: createNestApplication() never runs
+    // main.ts's bootstrap(), so cookie-parser isn't applied automatically. Without
+    // it, req.cookies is undefined and /auth/refresh always sees no token.
+    app.use(cookieParser());
     app.setGlobalPrefix('api/v1', { exclude: ['health'] });
     app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
     await app.init();
@@ -63,5 +68,27 @@ describe('Auth password reset (e2e)', () => {
 
   it('reset-request for unknown email still returns 204 (no enumeration)', async () => {
     await agent().post('/api/v1/auth/password/reset-request').send({ email: 'nobody@b.com' }).expect(204);
+  });
+
+  it('revokes an existing refresh session when the password is reset', async () => {
+    await agent().post('/api/v1/auth/register').send({ email: 'revoke@b.com', password: 'password123' }).expect(201);
+
+    const login = await agent()
+      .post('/api/v1/auth/login')
+      .send({ email: 'revoke@b.com', password: 'password123' })
+      .expect(200);
+    const oldRefreshCookie = login.headers['set-cookie'][0];
+    expect(oldRefreshCookie).toMatch(/refresh_token=/);
+
+    logs.length = 0;
+    await agent().post('/api/v1/auth/password/reset-request').send({ email: 'revoke@b.com' }).expect(204);
+    const token = (logs.join('').match(/token=([\w-]+)/) ?? [])[1];
+    expect(token).toBeTruthy();
+
+    await agent().post('/api/v1/auth/password/reset').send({ token, password: 'newpassword456' }).expect(204);
+
+    // The old refresh session must be revoked by TokenService.revokeAll(userId)
+    // as part of the reset, even though the token itself was never used again.
+    await agent().post('/api/v1/auth/refresh').set('Cookie', oldRefreshCookie).expect(401);
   });
 });
