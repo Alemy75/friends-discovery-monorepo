@@ -1,4 +1,5 @@
 import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql';
+import { RedisContainer, StartedRedisContainer } from '@testcontainers/redis';
 import { execSync } from 'node:child_process';
 import * as path from 'node:path';
 
@@ -20,6 +21,21 @@ export async function startPostgres(): Promise<StartedPostgres> {
   });
   return {
     url,
+    stop: async () => {
+      await container.stop();
+    },
+  };
+}
+
+export interface StartedRedis {
+  url: string;
+  stop: () => Promise<void>;
+}
+
+export async function startRedis(): Promise<StartedRedis> {
+  const container: StartedRedisContainer = await new RedisContainer('redis:7').start();
+  return {
+    url: container.getConnectionUrl(),
     stop: async () => {
       await container.stop();
     },

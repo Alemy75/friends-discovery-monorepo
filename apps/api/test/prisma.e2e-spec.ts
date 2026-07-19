@@ -1,18 +1,24 @@
 import { Test } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import { startPostgres, StartedPostgres } from './testcontainers';
+import { startPostgres, startRedis, StartedPostgres, StartedRedis } from './testcontainers';
 import type { AppModule as AppModuleType } from '../src/app.module';
 import type { PrismaService as PrismaServiceType } from '../src/prisma/prisma.service';
 
 describe('Prisma (integration)', () => {
   let pg: StartedPostgres;
+  let redis: StartedRedis;
   let app: INestApplication;
   let prisma: PrismaServiceType;
 
   beforeAll(async () => {
     pg = await startPostgres();
+    redis = await startRedis();
     process.env.DATABASE_URL = pg.url;
-    process.env.REDIS_URL = 'redis://localhost:6379';
+    // AppModule now wires in the global RedisModule (Task 5), so a live,
+    // reachable Redis is required here too — a fake/unreachable REDIS_URL
+    // leaves the ioredis client reconnecting after the test ends, delaying
+    // Jest's exit.
+    process.env.REDIS_URL = redis.url;
     process.env.NODE_ENV = 'test';
     // AppConfigModule validates process.env eagerly at import time (inside
     // ConfigModule.forRoot()), so AppModule must be imported *after* the env
@@ -30,6 +36,7 @@ describe('Prisma (integration)', () => {
 
   afterAll(async () => {
     await app?.close();
+    await redis?.stop();
     await pg?.stop();
   });
 
