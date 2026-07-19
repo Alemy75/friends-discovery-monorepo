@@ -1,0 +1,154 @@
+@import 'tailwindcss';
+
+@theme {
+  /* Colors */
+  --color-canvas: #f5f5f5;
+  --color-paper: #ffffff;
+  --color-surface-alt: #fafafa;
+  --color-ink: #0a0a0a;
+  --color-ink-soft: #171717;
+  --color-mid-gray: #737373;
+  --color-hairline: #e5e5e5;
+  --color-ember: #e7000b;
+
+  /* Warm coral accent — brand vibrancy on a monochrome base */
+  --color-accent: #fb5d5d;
+  --color-accent-2: #ff8e72;
+  --color-accent-soft: #ffe8e6;
+  --color-accent-ink: #e23b3b;
+
+  /* Typography */
+  --font-geist: 'Geist', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    'Segoe UI', Roboto, sans-serif;
+
+  /* Border radius — 18px interactive, 24px containers */
+  --radius-card: 24px;
+  --radius-pill: 18px;
+  --radius-nested: 10px;
+  --radius-small: 6px;
+
+  /* Elevation — barely-perceptible card lift */
+  --shadow-card: 0 0 0 1px rgba(23, 23, 23, 0.05), 0 1px 3px 0 rgba(0, 0, 0, 0.1),
+    0 1px 2px -1px rgba(0, 0, 0, 0.1);
+}
+
+:root {
+  color-scheme: light;
+}
+
+/* Coral gradient fill — primary actions, accents, celebratory moments */
+.accent-gradient {
+  background-image: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-2) 100%);
+}
+.accent-gradient-text {
+  background-image: linear-gradient(120deg, var(--color-accent-ink), var(--color-accent-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+/* Soft radial warmth behind hero content */
+.accent-glow {
+  background: radial-gradient(
+    600px circle at 78% 12%,
+    rgba(251, 93, 93, 0.16),
+    rgba(251, 93, 93, 0) 60%
+  );
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-geist);
+  font-size: 14px;
+  line-height: 1.43;
+  font-feature-settings: 'ss01' on, 'cv11' on;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Type scale — bundled size / line-height / tracking per the reference */
+.t-display {
+  font-size: clamp(34px, 7vw, 48px);
+  line-height: 1.1;
+  letter-spacing: -0.05em;
+  font-weight: 600;
+}
+.t-heading-lg {
+  font-size: clamp(28px, 5vw, 36px);
+  line-height: 1.11;
+  letter-spacing: -0.025em;
+  font-weight: 600;
+}
+.t-heading {
+  font-size: 30px;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  font-weight: 600;
+}
+.t-heading-sm {
+  font-size: 24px;
+  line-height: 1.33;
+  letter-spacing: -0.025em;
+  font-weight: 600;
+}
+.t-subheading {
+  font-size: 18px;
+  line-height: 1.56;
+  font-weight: 500;
+}
+.t-body-lg {
+  font-size: 16px;
+  line-height: 1.5;
+}
+.t-body {
+  font-size: 14px;
+  line-height: 1.43;
+}
+.t-caption {
+  font-size: 12px;
+  line-height: 1.33;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Focus ring — hairline, no offset */
+.focus-hairline:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 1px var(--color-hairline);
+}
+
+/* Thin scrollbars to match the quiet aesthetic */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-hairline) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--color-hairline);
+  border-radius: 999px;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) translateX(-50%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) translateX(-50%);
+  }
+}
