@@ -27,7 +27,7 @@ Not for: personal/session TODOs (use the in-session task list); tracking work th
 | Board | GitHub Projects v2, owner `Alemy75`, **project number 1** |
 | Task = | a GitHub **Issue** (not a draft item) |
 | `FDM-N` | the issue number `N` |
-| Field to set | **Status** → `Todo` (or `In Progress` if starting immediately) |
+| Field to set | **Status** (Backlog / Ready / In progress / In review / Done — see Status rule) |
 | Title | imperative, concise, no `FDM-` prefix (the number is the issue #) |
 
 ## Steps
@@ -42,13 +42,13 @@ Use the **GitHub MCP** tools available in your session (capability names vary by
 
 ## Status rule
 
-The board's Status is a single-select field; confirm the exact option names on the
-board or with `gh project field-list 1 --owner Alemy75` (typically `Todo` /
-`In Progress` / `Done`). Pick by situation:
+The board's Status is a single-select field. This board's options (ids cached in the
+gh section below): `Backlog` / `Ready` / `In progress` / `In review` / `Done`. Pick
+by situation:
 
-- **Filing ahead of the work** → `Todo`.
-- **Picking it up now** (or filing a task for work already in progress / already
-  finished but not yet merged) → `In Progress`.
+- **Filing ahead of the work** → `Backlog` (or `Ready` if it's next up).
+- **Picking it up now** / work already in progress → `In progress`.
+- **PR open, awaiting review** → `In review`.
 - **`Done`** is set by the PR merge (`Closes #N`), **never manually at filing time.**
 
 ## Issue body template
@@ -96,9 +96,9 @@ lookup:
 
 | ID | Value |
 |---|---|
-| `PROJECT_ID` | _(fill in on first run)_ |
-| Status field id | _(fill in)_ |
-| Status option ids | `Todo` = _…_, `In Progress` = _…_, `Done` = _…_ |
+| `PROJECT_ID` | `PVT_kwHOBrjgR84Bd1XX` |
+| Status field id | `PVTSSF_lAHOBrjgR84Bd1XXzhYT_8s` |
+| Status option ids | `Backlog`=`f75ad846` · `Ready`=`61e4505c` · `In progress`=`47fc9ee4` · `In review`=`df73e18b` · `Done`=`98236657` |
 
 ## Common mistakes
 
