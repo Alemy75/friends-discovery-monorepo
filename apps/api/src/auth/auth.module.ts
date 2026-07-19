@@ -9,6 +9,7 @@ import { VerificationService } from './verification.service';
 import { JwtStrategy } from './jwt.strategy';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
+import { SmartCaptchaGuard } from './guards/smart-captcha.guard';
 
 @Module({
   imports: [PassportModule],
@@ -19,6 +20,7 @@ import { RolesGuard } from './guards/roles.guard';
     TokenService,
     VerificationService,
     JwtStrategy,
+    SmartCaptchaGuard,
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
   ],

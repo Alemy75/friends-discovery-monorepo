@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Post, Req, Res, UnauthorizedException } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Post, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { MeResponse } from '@friends-ai/contracts';
 import { AppConfigService } from '../config/config.service';
@@ -11,6 +11,7 @@ import { ResetRequestDto } from './dto/reset-request.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { Public } from './decorators/public.decorator';
 import { CurrentUser, AuthUser } from './decorators/current-user.decorator';
+import { SmartCaptchaGuard } from './guards/smart-captcha.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -21,6 +22,7 @@ export class AuthController {
   ) {}
 
   @Public()
+  @UseGuards(SmartCaptchaGuard)
   @Post('register')
   @HttpCode(201)
   async register(@Body() dto: RegisterDto): Promise<void> {
@@ -75,6 +77,7 @@ export class AuthController {
   }
 
   @Public()
+  @UseGuards(SmartCaptchaGuard)
   @Post('password/reset-request')
   @HttpCode(204)
   async resetRequest(@Body() dto: ResetRequestDto): Promise<void> {
