@@ -1,5 +1,5 @@
 import { BadRequestException, ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
-import { Role } from '@friends-ai/contracts';
+import { AccountStatus, MeResponse, Role } from '@friends-ai/contracts';
 import { PrismaService } from '../prisma/prisma.service';
 import { PasswordService } from './password.service';
 import { TokenService } from './token.service';
@@ -55,6 +55,21 @@ export class AuthService {
   async userRole(userId: string): Promise<Role> {
     const u = await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
     return u.role as Role;
+  }
+
+  async me(userId: string): Promise<MeResponse> {
+    const user = await this.prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      include: { identities: { where: { provider: 'password' }, take: 1 } },
+    });
+    const identity = user.identities[0];
+    return {
+      id: user.id,
+      email: identity?.identifier ?? '',
+      role: user.role as Role,
+      status: user.status as AccountStatus,
+      emailVerified: !!identity?.verifiedAt,
+    };
   }
 
   async requestReset(email: string): Promise<void> {

@@ -1,5 +1,6 @@
-import { Body, Controller, HttpCode, Post, Req, Res, UnauthorizedException } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Post, Req, Res, UnauthorizedException } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { MeResponse } from '@friends-ai/contracts';
 import { AppConfigService } from '../config/config.service';
 import { AuthService } from './auth.service';
 import { TokenService } from './token.service';
@@ -8,6 +9,8 @@ import { RegisterDto } from './dto/register.dto';
 import { ResetDto } from './dto/reset.dto';
 import { ResetRequestDto } from './dto/reset-request.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
+import { Public } from './decorators/public.decorator';
+import { CurrentUser, AuthUser } from './decorators/current-user.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -17,12 +20,14 @@ export class AuthController {
     private readonly config: AppConfigService,
   ) {}
 
+  @Public()
   @Post('register')
   @HttpCode(201)
   async register(@Body() dto: RegisterDto): Promise<void> {
     await this.auth.register(dto.email, dto.password);
   }
 
+  @Public()
   @Post('verify-email')
   @HttpCode(204)
   async verifyEmail(@Body() dto: VerifyEmailDto): Promise<void> {
@@ -39,6 +44,7 @@ export class AuthController {
     };
   }
 
+  @Public()
   @Post('login')
   @HttpCode(200)
   async login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
@@ -47,6 +53,7 @@ export class AuthController {
     return { accessToken };
   }
 
+  @Public()
   @Post('refresh')
   @HttpCode(200)
   async refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
@@ -58,6 +65,7 @@ export class AuthController {
     return { accessToken: this.tokens.signAccess(rotated.userId, user) };
   }
 
+  @Public()
   @Post('logout')
   @HttpCode(204)
   async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
@@ -66,15 +74,28 @@ export class AuthController {
     res.clearCookie('refresh_token', { path: '/api/v1/auth' });
   }
 
+  @Public()
   @Post('password/reset-request')
   @HttpCode(204)
   async resetRequest(@Body() dto: ResetRequestDto): Promise<void> {
     await this.auth.requestReset(dto.email);
   }
 
+  @Public()
   @Post('password/reset')
   @HttpCode(204)
   async reset(@Body() dto: ResetDto): Promise<void> {
     await this.auth.resetPassword(dto.token, dto.password);
+  }
+
+  @Get('me')
+  async me(@CurrentUser() user: AuthUser): Promise<MeResponse> {
+    return this.auth.me(user.id);
+  }
+
+  @Post('logout-all')
+  @HttpCode(204)
+  async logoutAll(@CurrentUser() user: AuthUser): Promise<void> {
+    await this.tokens.revokeAll(user.id);
   }
 }
