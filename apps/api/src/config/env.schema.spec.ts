@@ -41,6 +41,14 @@ describe('validateEnv', () => {
     expect(env.MAIL_FROM).toBe('no-reply@friends.local');
   });
 
+  it('parses boolean env from strings correctly', () => {
+    expect(
+      validateEnv({ ...valid, COOKIE_SECURE: 'false', CAPTCHA_ENABLED: 'false' }).COOKIE_SECURE,
+    ).toBe(false);
+    expect(validateEnv({ ...valid, COOKIE_SECURE: 'false' }).CAPTCHA_ENABLED).toBe(false);
+    expect(validateEnv({ ...valid, COOKIE_SECURE: 'true' }).COOKIE_SECURE).toBe(true);
+  });
+
   it('throws when JWT_SECRET is too short', () => {
     expect(() =>
       validateEnv({

@@ -8,10 +8,10 @@ export const envSchema = z.object({
   JWT_SECRET: z.string().min(32),
   JWT_ACCESS_TTL: z.coerce.number().int().positive().default(900),
   JWT_REFRESH_TTL: z.coerce.number().int().positive().default(2592000),
-  COOKIE_SECURE: z.coerce.boolean().default(false),
+  COOKIE_SECURE: z.preprocess((v) => v === true || v === 'true', z.boolean()).default(false),
   APP_URL: z.string().url(),
   MAIL_FROM: z.string().default('no-reply@friends.local'),
-  CAPTCHA_ENABLED: z.coerce.boolean().default(false),
+  CAPTCHA_ENABLED: z.preprocess((v) => v === true || v === 'true', z.boolean()).default(false),
   CAPTCHA_SECRET: z.string().optional(),
 });
 
