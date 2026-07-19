@@ -107,3 +107,4 @@ lookup:
 - **Forgetting to add the issue to the board** — an issue not on project #1 won't show on the board.
 - **Vague acceptance criteria** — "make auth work" isn't checkable. Write outcomes a reviewer can verify.
 - **Not reporting the issue number** — the PR author needs `N` for `[FDM-N]` + `Closes #N`.
+- **Filing the issue after opening its PR** — issues and PRs share **one** number sequence in a repo, so create the task issue **first**; it then owns a stable `FDM-N`. A number already taken by a PR can never become an issue (once PR `#1` exists, there is no issue `#1`). `Closes #N` also only fires on merge, so link before merging, not after.
