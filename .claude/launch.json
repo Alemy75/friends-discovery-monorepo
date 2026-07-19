@@ -2,9 +2,9 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "friends-ai",
+      "name": "web-reference",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeArgs": ["--prefix", "reference/web-reference", "run", "dev"],
       "port": 5173
     }
   ]
