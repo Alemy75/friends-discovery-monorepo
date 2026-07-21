@@ -52,3 +52,26 @@ it('reflects unauthenticated then authenticated after login', async () => {
   await userEvent.click(screen.getByText('login'));
   await waitFor(() => expect(screen.getByText('email:a@b.com')).toBeInTheDocument());
 });
+
+it('register() calls the backend register endpoint', async () => {
+  const di = createAppContainer({ apiBaseUrl: '/api/v1' });
+  const calls: string[] = [];
+  vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+    calls.push(String(input));
+    return new Response(null, { status: 201 });
+  });
+  function H() {
+    const { register } = useAuth();
+    return <button onClick={() => register('a@b.com', 'password123')}>go</button>;
+  }
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  render(
+    <ContainerProvider container={di}>
+      <QueryClientProvider client={qc}>
+        <H />
+      </QueryClientProvider>
+    </ContainerProvider>,
+  );
+  await userEvent.click(screen.getByText('go'));
+  await waitFor(() => expect(calls.some((u) => u.endsWith('/auth/register'))).toBe(true));
+});
