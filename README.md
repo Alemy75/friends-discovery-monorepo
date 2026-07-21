@@ -51,3 +51,10 @@ npm run test:e2e -w @friends-ai/api       # e2e на реальных Postgres/R
 Исходный SPA-набросок (лендинг, auth, онбординг, свайп-поиск, мэтчи+чат, профиль) сохранён
 в [`reference/web-reference/`](reference/web-reference/) как ориентир по домену и визуалу.
 Продуктовый фронтенд переписывается начисто отдельно.
+
+## Deployment
+
+Production runs as a Docker Compose stack behind Caddy (auto-TLS). See the
+[deployment runbook](docs/deployment.md) for provisioning, first deploy,
+updates, and DB backup/restore. Design rationale:
+[spec](docs/superpowers/specs/2026-07-21-prod-deployment-design.md).
