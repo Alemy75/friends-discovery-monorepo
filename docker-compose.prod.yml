@@ -1,7 +1,6 @@
 # Production stack. Bring up with:
 #   docker compose -f docker-compose.prod.yml up -d --build
-# Requires a .env file (see .env.prod.example). Only Caddy publishes ports
-# (added in a later task); postgres/redis/api stay on the internal network.
+# Requires a .env file (see .env.prod.example). Only Caddy publishes ports.
 
 x-logging: &default-logging
   driver: json-file
@@ -58,5 +57,21 @@ services:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
 
+  caddy:
+    build:
+      context: .
+      dockerfile: infra/web/Dockerfile
+    environment:
+      DOMAIN: ${DOMAIN}
+    ports: ["80:80", "443:443"]
+    restart: unless-stopped
+    logging: *default-logging
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [api]
+
 volumes:
   pgdata:
+  caddy_data:
+  caddy_config:
