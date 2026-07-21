@@ -43,14 +43,28 @@ Run one on demand:
 docker compose -f docker-compose.prod.yml run --rm backup once
 ```
 
-Restore the latest dump into a scratch database:
+Restore the latest dump into a fresh scratch database — never the live one. This is a
+restore drill, not a rollback. Run it through the `backup` service itself: it already has
+`mc` installed and the `S3_*`/`PG*` credentials wired up via `docker-compose.prod.yml`, so
+there's no need to install `mc` on the host or export anything from `.env`:
 
 ```bash
-mc alias set s3 "$S3_ENDPOINT" "$S3_ACCESS_KEY" "$S3_SECRET_KEY"
-OBJ=$(mc ls "s3/$BACKUP_S3_BUCKET/backups/" | awk '{print $NF}' | tail -1)
-mc cat "s3/$BACKUP_S3_BUCKET/backups/$OBJ" | gunzip -c \
-  | docker compose -f docker-compose.prod.yml exec -T postgres \
-      psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"
+docker compose -f docker-compose.prod.yml run --rm --entrypoint sh backup -c '
+  mc alias set s3 "$S3_ENDPOINT" "$S3_ACCESS_KEY" "$S3_SECRET_KEY" >/dev/null &&
+  OBJ=$(mc ls "s3/$S3_BUCKET/backups/" | awk "{print \$NF}" | tail -1) &&
+  dropdb --if-exists -U "$PGUSER" restore_test &&
+  createdb -U "$PGUSER" restore_test &&
+  mc cat "s3/$S3_BUCKET/backups/$OBJ" | gunzip -c | psql -U "$PGUSER" -d restore_test
+'
+```
+
+Inspect it, then drop the scratch database when done:
+
+```bash
+docker compose -f docker-compose.prod.yml run --rm --entrypoint sh backup -c \
+  'psql -U "$PGUSER" -d restore_test -c "\dt"'
+docker compose -f docker-compose.prod.yml run --rm --entrypoint sh backup -c \
+  'dropdb -U "$PGUSER" restore_test'
 ```
 
 ## Local smoke (no server needed)
