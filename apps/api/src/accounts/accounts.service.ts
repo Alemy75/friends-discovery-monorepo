@@ -1,0 +1,65 @@
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
+import { AccountKind, MyAccountResponse } from '@friends-ai/contracts';
+import { PrismaService } from '../prisma/prisma.service';
+import { CreateAccountDto } from './dto/create-account.dto';
+import { ACCOUNT_INCLUDE, toMyAccountResponse } from './accounts.mapper';
+
+@Injectable()
+export class AccountsService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async createAccount(userId: string, dto: CreateAccountDto): Promise<MyAccountResponse> {
+    const existing = await this.prisma.account.findUnique({ where: { ownerUserId: userId } });
+    if (existing) throw new ConflictException('Account already exists');
+
+    this.assertMemberCardinality(dto.kind, dto.members.length);
+
+    const city = await this.prisma.city.findFirst({ where: { id: dto.cityId, isActive: true } });
+    if (!city) throw new BadRequestException('Unknown or inactive city');
+
+    const interestIds = await this.resolveInterestIds(dto.interestSlugs);
+
+    const account = await this.prisma.account.create({
+      data: {
+        ownerUserId: userId,
+        kind: dto.kind,
+        cityId: dto.cityId,
+        bio: dto.bio ?? null,
+        intents: dto.intents,
+        members: { create: dto.members.map((m, i) => ({ position: i, name: m.name, age: m.age })) },
+        interests: { create: interestIds.map((interestId) => ({ interestId })) },
+      },
+      include: ACCOUNT_INCLUDE,
+    });
+    return toMyAccountResponse(account);
+  }
+
+  async getMyAccount(userId: string): Promise<MyAccountResponse> {
+    const account = await this.requireOwnAccount(userId);
+    return toMyAccountResponse(account);
+  }
+
+  async requireOwnAccount(userId: string) {
+    const account = await this.prisma.account.findUnique({
+      where: { ownerUserId: userId },
+      include: ACCOUNT_INCLUDE,
+    });
+    if (!account) throw new NotFoundException('Account not found');
+    return account;
+  }
+
+  assertMemberCardinality(kind: AccountKind, count: number): void {
+    const expected = kind === AccountKind.Couple ? 2 : 1;
+    if (count !== expected) {
+      throw new BadRequestException(`${kind} account must have exactly ${expected} member(s)`);
+    }
+  }
+
+  async resolveInterestIds(slugs: string[], tx: Prisma.TransactionClient | PrismaService = this.prisma): Promise<string[]> {
+    const unique = [...new Set(slugs)];
+    const interests = await tx.interest.findMany({ where: { slug: { in: unique }, isActive: true } });
+    if (interests.length !== unique.length) throw new BadRequestException('Unknown or inactive interests');
+    return interests.map((i) => i.id);
+  }
+}

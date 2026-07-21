@@ -10,6 +10,7 @@ import { HealthModule } from './health/health.module';
 import { MailModule } from './mail/mail.module';
 import { AuthModule } from './auth/auth.module';
 import { CatalogModule } from './catalog/catalog.module';
+import { AccountsModule } from './accounts/accounts.module';
 import { PrismaExceptionFilter } from './common/prisma-exception.filter';
 
 @Module({
@@ -21,6 +22,7 @@ import { PrismaExceptionFilter } from './common/prisma-exception.filter';
     MailModule,
     AuthModule,
     CatalogModule,
+    AccountsModule,
     ThrottlerModule.forRootAsync({
       inject: [AppConfigService],
       useFactory: (c: AppConfigService) => ({
