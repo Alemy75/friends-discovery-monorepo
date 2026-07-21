@@ -43,6 +43,27 @@ it('verifies the code, auto-logs-in, and lands home', async () => {
   await waitFor(() => expect(screen.getByText('home')).toBeInTheDocument());
 });
 
+it('shows a recovery message and a link to /login when verify succeeds but auto-login fails', async () => {
+  vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+    const url = String(input);
+    if (url.endsWith('/auth/verify-email')) return new Response(null, { status: 204 });
+    if (url.endsWith('/auth/login')) return new Response(null, { status: 500 });
+    return new Response(null, { status: 404 });
+  });
+  renderWithProviders(tree(), { route: '/register-seed' });
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Подтвердить' })).toBeInTheDocument());
+  await userEvent.type(screen.getByLabelText('Код из письма'), '123456');
+  await userEvent.click(screen.getByRole('button', { name: 'Подтвердить' }));
+
+  // The user must not see the misleading "invalid code" message, must not be
+  // stuck resubmitting the (now-consumed) code, and must have an in-app path
+  // forward to /login.
+  await waitFor(() => expect(screen.getByText('Email подтверждён')).toBeInTheDocument());
+  expect(screen.queryByText('Неверный или просроченный код')).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Подтвердить' })).not.toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'Перейти на страницу входа' })).toHaveAttribute('href', '/login');
+});
+
 it('redirects to /register when there is no email in navigation state', async () => {
   renderWithProviders(
     <Routes>

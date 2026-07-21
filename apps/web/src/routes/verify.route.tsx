@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/use-auth';
 import { codeSchema, type CodeValues } from '../auth/schemas';
 import { authErrorMessage } from '../auth/auth-error';
@@ -19,6 +19,7 @@ export function VerifyScreen() {
   const navigate = useNavigate();
   const state = (useLocation().state ?? {}) as VerifyState;
   const [formError, setFormError] = useState<string | null>(null);
+  const [autoLoginFailed, setAutoLoginFailed] = useState(false);
   const errorRef = useRef<HTMLParagraphElement>(null);
   const {
     register,
@@ -35,14 +36,43 @@ export function VerifyScreen() {
 
   const onSubmit = handleSubmit(async ({ code }) => {
     setFormError(null);
+    // verifyEmail and login are two independent network calls. If verifyEmail
+    // succeeds (the code is now consumed server-side) but the auto-login call
+    // fails (e.g. a transient 5xx), the code can never be resubmitted
+    // successfully — so that failure must NOT be reported as an invalid code.
+    // It gets its own catch that moves the user to a distinct recovery state
+    // with a path to /login, instead of re-showing the verify form.
     try {
       await verifyEmail(email, code);
-      await login(email, password);
-      navigate('/');
     } catch (err) {
       setFormError(authErrorMessage(err, { 400: 'Неверный или просроченный код' }));
+      return;
+    }
+    try {
+      await login(email, password);
+      navigate('/');
+    } catch {
+      setAutoLoginFailed(true);
     }
   });
+
+  if (autoLoginFailed) {
+    return (
+      <AuthCard
+        title="Email подтверждён"
+        subtitle="Не удалось выполнить автоматический вход. Попробуйте войти вручную."
+        footer={
+          <Link to="/login" className="text-ink font-medium underline underline-offset-2">
+            Перейти на страницу входа
+          </Link>
+        }
+      >
+        <p className="text-sm font-geist text-mid-gray">
+          Ваш email подтверждён — просто войдите со своим паролем.
+        </p>
+      </AuthCard>
+    );
+  }
 
   return (
     <AuthCard title="Подтвердите email" subtitle={`Мы отправили код на ${email}`}>
