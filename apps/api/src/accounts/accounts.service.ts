@@ -2,6 +2,7 @@ import { BadRequestException, ConflictException, Injectable, NotFoundException }
 import { Prisma } from '@prisma/client';
 import { AccountKind, MyAccountResponse } from '@friends-ai/contracts';
 import { PrismaService } from '../prisma/prisma.service';
+import { ChangeKindDto } from './dto/change-kind.dto';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
 import { ACCOUNT_INCLUDE, toMyAccountResponse } from './accounts.mapper';
@@ -77,6 +78,25 @@ export class AccountsService {
       if (dto.bio !== undefined) data.bio = dto.bio;
       if (dto.intents !== undefined) data.intents = dto.intents;
       if (Object.keys(data).length > 0) await tx.account.update({ where: { id: account.id }, data });
+    });
+
+    return this.getMyAccount(userId);
+  }
+
+  async changeKind(userId: string, dto: ChangeKindDto): Promise<MyAccountResponse> {
+    const account = await this.requireOwnAccount(userId);
+    if (account.kind === dto.kind) throw new BadRequestException(`Account is already ${dto.kind}`);
+
+    await this.prisma.$transaction(async (tx) => {
+      if (dto.kind === AccountKind.Couple) {
+        if (!dto.secondMember) throw new BadRequestException('secondMember is required to switch to couple');
+        await tx.accountMember.create({
+          data: { accountId: account.id, position: 1, name: dto.secondMember.name, age: dto.secondMember.age },
+        });
+      } else {
+        await tx.accountMember.deleteMany({ where: { accountId: account.id, position: { gte: 1 } } });
+      }
+      await tx.account.update({ where: { id: account.id }, data: { kind: dto.kind } });
     });
 
     return this.getMyAccount(userId);

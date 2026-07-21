@@ -81,3 +81,43 @@ describe('AccountsService.updateProfile', () => {
     expect(tx.account.update).toHaveBeenCalledWith({ where: { id: 'a1' }, data: { bio: 'new' } });
   });
 });
+
+describe('AccountsService.changeKind', () => {
+  it('single -> couple requires secondMember and inserts member at position 1', async () => {
+    const tx = {
+      accountMember: { create: jest.fn().mockResolvedValue({}), deleteMany: jest.fn() },
+      account: { update: jest.fn().mockResolvedValue({}) },
+    };
+    const prisma = {
+      account: {
+        findUnique: jest.fn()
+          .mockResolvedValueOnce({ id: 'a1', kind: 'single', members: [{ id: 'm0', position: 0 }] })
+          .mockResolvedValueOnce({ id: 'a1', kind: 'couple', city: { id: 'c', slug: 's', name: 'n', timezone: 't' }, members: [], interests: [], intents: [], bio: null, status: 'active', lastActiveAt: new Date() }),
+      },
+      $transaction: jest.fn().mockImplementation(async (cb: any) => cb(tx)),
+    } as any;
+    const svc = newService(prisma);
+
+    await svc.changeKind('u1', { kind: AccountKind.Couple, secondMember: { name: 'B', age: 29 } });
+
+    expect(tx.accountMember.create).toHaveBeenCalledWith({ data: { accountId: 'a1', position: 1, name: 'B', age: 29 } });
+    expect(tx.account.update).toHaveBeenCalledWith({ where: { id: 'a1' }, data: { kind: AccountKind.Couple } });
+  });
+
+  it('single -> couple without secondMember throws BadRequest', async () => {
+    const prisma = {
+      account: { findUnique: jest.fn().mockResolvedValue({ id: 'a1', kind: 'single', members: [{ id: 'm0', position: 0 }] }) },
+      $transaction: jest.fn().mockImplementation(async (cb: any) => cb({})),
+    } as any;
+    const svc = newService(prisma);
+    await expect(svc.changeKind('u1', { kind: AccountKind.Couple })).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('rejects no-op change to the same kind', async () => {
+    const prisma = {
+      account: { findUnique: jest.fn().mockResolvedValue({ id: 'a1', kind: 'single', members: [] }) },
+    } as any;
+    const svc = newService(prisma);
+    await expect(svc.changeKind('u1', { kind: AccountKind.Single })).rejects.toBeInstanceOf(BadRequestException);
+  });
+});

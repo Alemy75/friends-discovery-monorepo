@@ -118,4 +118,27 @@ describe('Accounts onboarding (e2e)', () => {
     expect(res.body.interests.map((i: any) => i.slug).sort()).toEqual(['wine', 'yoga']);
     expect(res.body.intents.sort()).toEqual(['hobby', 'travel']);
   });
+
+  it('switches single -> couple then couple -> single, keeping member cardinality consistent', async () => {
+    const token = await newUserToken();
+    await request(app.getHttpServer())
+      .post('/api/v1/accounts').set('Authorization', `Bearer ${token}`)
+      .send({ kind: AccountKind.Single, cityId, members: [{ name: 'A', age: 30 }], interestSlugs: ['coffee', 'books'], intents: [Intent.Walks] })
+      .expect(201);
+
+    const toCouple = await request(app.getHttpServer())
+      .patch('/api/v1/accounts/me/kind').set('Authorization', `Bearer ${token}`)
+      .send({ kind: AccountKind.Couple, secondMember: { name: 'B', age: 28 } })
+      .expect(200);
+    expect(toCouple.body.kind).toBe('couple');
+    expect(toCouple.body.members).toHaveLength(2);
+    expect(toCouple.body.members.map((m: any) => m.position)).toEqual([0, 1]);
+
+    const toSingle = await request(app.getHttpServer())
+      .patch('/api/v1/accounts/me/kind').set('Authorization', `Bearer ${token}`)
+      .send({ kind: AccountKind.Single })
+      .expect(200);
+    expect(toSingle.body.kind).toBe('single');
+    expect(toSingle.body.members).toHaveLength(1);
+  });
 });
