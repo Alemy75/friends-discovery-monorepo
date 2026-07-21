@@ -53,4 +53,16 @@ export default tseslint.config(
       },
     },
   },
+  {
+    // Vendored verbatim from https://github.com/temoncher/dikon — not our
+    // code style, kept as-is (see header comment in the file). Its generic
+    // defaults rely on `{}` and it uses a namespace for type extraction, both
+    // of which trip our stricter rules; relax just those two here rather
+    // than editing the vendored source.
+    files: ['src/lib/di/dikon.ts'],
+    rules: {
+      '@typescript-eslint/no-empty-object-type': 'off',
+      '@typescript-eslint/no-namespace': 'off',
+    },
+  },
 );
