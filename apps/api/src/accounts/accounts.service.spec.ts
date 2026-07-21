@@ -56,3 +56,28 @@ describe('AccountsService.createAccount', () => {
     await expect(svc.createAccount('u1', makeDto())).rejects.toBeInstanceOf(BadRequestException);
   });
 });
+
+describe('AccountsService.updateProfile', () => {
+  it('resets interests inside a transaction and updates bio', async () => {
+    const tx = {
+      interest: { findMany: jest.fn().mockResolvedValue([{ id: 'i1', slug: 'coffee' }, { id: 'i2', slug: 'wine' }]) },
+      accountInterest: { deleteMany: jest.fn().mockResolvedValue({}), createMany: jest.fn().mockResolvedValue({}) },
+      account: { update: jest.fn().mockResolvedValue({}) },
+    };
+    const prisma = {
+      account: {
+        findUnique: jest.fn()
+          .mockResolvedValueOnce({ id: 'a1' }) // requireOwnAccount (первый вызов)
+          .mockResolvedValueOnce({ id: 'a1', city: { id: 'c', slug: 's', name: 'n', timezone: 't' }, members: [], interests: [], intents: [], bio: 'new', status: 'active', kind: 'single', lastActiveAt: new Date() }), // финальный getMyAccount
+      },
+      $transaction: jest.fn().mockImplementation(async (cb: any) => cb(tx)),
+    } as any;
+    const svc = newService(prisma);
+
+    await svc.updateProfile('u1', { bio: 'new', interestSlugs: ['coffee', 'wine'] });
+
+    expect(tx.accountInterest.deleteMany).toHaveBeenCalledWith({ where: { accountId: 'a1' } });
+    expect(tx.accountInterest.createMany).toHaveBeenCalledWith({ data: [{ accountId: 'a1', interestId: 'i1' }, { accountId: 'a1', interestId: 'i2' }] });
+    expect(tx.account.update).toHaveBeenCalledWith({ where: { id: 'a1' }, data: { bio: 'new' } });
+  });
+});

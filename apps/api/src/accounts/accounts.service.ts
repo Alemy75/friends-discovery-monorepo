@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client';
 import { AccountKind, MyAccountResponse } from '@friends-ai/contracts';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateAccountDto } from './dto/create-account.dto';
+import { UpdateAccountDto } from './dto/update-account.dto';
 import { ACCOUNT_INCLUDE, toMyAccountResponse } from './accounts.mapper';
 
 @Injectable()
@@ -61,5 +62,23 @@ export class AccountsService {
     const interests = await tx.interest.findMany({ where: { slug: { in: unique }, isActive: true } });
     if (interests.length !== unique.length) throw new BadRequestException('Unknown or inactive interests');
     return interests.map((i) => i.id);
+  }
+
+  async updateProfile(userId: string, dto: UpdateAccountDto): Promise<MyAccountResponse> {
+    const account = await this.requireOwnAccount(userId);
+
+    await this.prisma.$transaction(async (tx) => {
+      if (dto.interestSlugs !== undefined) {
+        const ids = await this.resolveInterestIds(dto.interestSlugs, tx);
+        await tx.accountInterest.deleteMany({ where: { accountId: account.id } });
+        await tx.accountInterest.createMany({ data: ids.map((interestId) => ({ accountId: account.id, interestId })) });
+      }
+      const data: Prisma.AccountUpdateInput = {};
+      if (dto.bio !== undefined) data.bio = dto.bio;
+      if (dto.intents !== undefined) data.intents = dto.intents;
+      if (Object.keys(data).length > 0) await tx.account.update({ where: { id: account.id }, data });
+    });
+
+    return this.getMyAccount(userId);
   }
 }

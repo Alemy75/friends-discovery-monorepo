@@ -101,4 +101,21 @@ describe('Accounts onboarding (e2e)', () => {
       .send({ kind: AccountKind.Couple, cityId, members: [{ name: 'A', age: 30 }], interestSlugs: ['coffee', 'books'], intents: [Intent.Walks] })
       .expect(400);
   });
+
+  it('edits bio, interests and intents via PATCH /accounts/me', async () => {
+    const token = await newUserToken();
+    await request(app.getHttpServer())
+      .post('/api/v1/accounts').set('Authorization', `Bearer ${token}`)
+      .send({ kind: AccountKind.Single, cityId, members: [{ name: 'A', age: 30 }], interestSlugs: ['coffee', 'books'], intents: [Intent.Walks] })
+      .expect(201);
+
+    const res = await request(app.getHttpServer())
+      .patch('/api/v1/accounts/me').set('Authorization', `Bearer ${token}`)
+      .send({ bio: 'обновил', interestSlugs: ['wine', 'yoga'], intents: [Intent.Travel, Intent.Hobby] })
+      .expect(200);
+
+    expect(res.body.bio).toBe('обновил');
+    expect(res.body.interests.map((i: any) => i.slug).sort()).toEqual(['wine', 'yoga']);
+    expect(res.body.intents.sort()).toEqual(['hobby', 'travel']);
+  });
 });

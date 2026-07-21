@@ -1,8 +1,9 @@
-import { Body, Controller, Get, HttpCode, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Patch, Post } from '@nestjs/common';
 import { MyAccountResponse } from '@friends-ai/contracts';
 import { CurrentUser, AuthUser } from '../auth/decorators/current-user.decorator';
 import { AccountsService } from './accounts.service';
 import { CreateAccountDto } from './dto/create-account.dto';
+import { UpdateAccountDto } from './dto/update-account.dto';
 
 @Controller('accounts')
 export class AccountsController {
@@ -17,5 +18,10 @@ export class AccountsController {
   @Get('me')
   me(@CurrentUser() user: AuthUser): Promise<MyAccountResponse> {
     return this.accounts.getMyAccount(user.id);
+  }
+
+  @Patch('me')
+  updateMe(@CurrentUser() user: AuthUser, @Body() dto: UpdateAccountDto): Promise<MyAccountResponse> {
+    return this.accounts.updateProfile(user.id, dto);
   }
 }
