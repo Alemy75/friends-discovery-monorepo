@@ -1,18 +1,25 @@
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/use-auth';
 import { Card } from '../ui/card';
+import { Button } from '../ui/button';
 
 export function HomeRoute() {
-  const { user, isLoading, isAuthenticated } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   return (
     <Card>
-      <h1 className="text-xl font-medium">friends.ai</h1>
-      {isLoading ? (
-        <p>Загрузка…</p>
-      ) : isAuthenticated ? (
-        <p>Вы вошли как {user?.email}</p>
-      ) : (
-        <p>Вы не вошли в систему.</p>
-      )}
+      <h1 className="text-xl font-geist font-medium text-ink">friends.ai</h1>
+      <p className="mt-2 font-geist text-mid-gray">Вы вошли как {user?.email}</p>
+      <Button
+        type="button"
+        className="mt-4"
+        onClick={async () => {
+          await logout();
+          navigate('/login');
+        }}
+      >
+        Выйти
+      </Button>
     </Card>
   );
 }
