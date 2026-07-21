@@ -32,3 +32,24 @@ it('currentUser returns the me payload', async () => {
   const svc = createAuthService({ authApi: fakeApi(), tokenStore: createTokenStore(), refreshSession: async () => true });
   await expect(svc.currentUser()).resolves.toMatchObject({ email: 'a@b.com' });
 });
+
+it('register delegates to authApi.register', async () => {
+  const api = fakeApi();
+  const svc = createAuthService({ authApi: api, tokenStore: createTokenStore(), refreshSession: async () => true });
+  await svc.register('a@b.com', 'pw');
+  expect(api.register).toHaveBeenCalledWith('a@b.com', 'pw');
+});
+
+it('verifyEmail delegates to authApi.verifyEmail', async () => {
+  const api = fakeApi();
+  const svc = createAuthService({ authApi: api, tokenStore: createTokenStore(), refreshSession: async () => true });
+  await svc.verifyEmail('a@b.com', '123456');
+  expect(api.verifyEmail).toHaveBeenCalledWith('a@b.com', '123456');
+});
+
+it('refresh delegates to the injected refreshSession', async () => {
+  const refreshSession = vi.fn(async () => true);
+  const svc = createAuthService({ authApi: fakeApi(), tokenStore: createTokenStore(), refreshSession });
+  await expect(svc.refresh()).resolves.toBe(true);
+  expect(refreshSession).toHaveBeenCalledTimes(1);
+});

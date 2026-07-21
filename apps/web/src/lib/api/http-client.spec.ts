@@ -12,8 +12,10 @@ it('attaches the bearer token and parses JSON', async () => {
   );
   const http = createHttpClient({ config, tokenStore: store, refreshSession: async () => true });
   await expect(http.request('/auth/me')).resolves.toEqual({ ok: true });
-  const headers = new Headers((fetchSpy.mock.calls[0][1] as RequestInit).headers);
+  const init = fetchSpy.mock.calls[0][1] as RequestInit;
+  const headers = new Headers(init.headers);
   expect(headers.get('authorization')).toBe('Bearer tok');
+  expect(init.credentials).toBe('include');
 });
 
 it('on 401 refreshes once and retries', async () => {

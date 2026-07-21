@@ -8,7 +8,9 @@ export function createRefreshSession({
   config: AppConfig;
   tokenStore: TokenStore;
 }): () => Promise<boolean> {
-  return async () => {
+  let inFlight: Promise<boolean> | null = null;
+
+  async function doRefresh(): Promise<boolean> {
     try {
       const res = await fetch(`${config.apiBaseUrl}/auth/refresh`, {
         method: 'POST',
@@ -25,5 +27,19 @@ export function createRefreshSession({
       tokenStore.clear();
       return false;
     }
+  }
+
+  return () => {
+    // Single-flight: concurrent callers share one in-flight refresh so we
+    // never fire parallel POST /auth/refresh requests (the backend treats a
+    // second use of the same refresh token as reuse/theft and kills the
+    // session). Once the request settles, clear the cache so the next call
+    // starts a fresh refresh.
+    if (!inFlight) {
+      inFlight = doRefresh().finally(() => {
+        inFlight = null;
+      });
+    }
+    return inFlight;
   };
 }

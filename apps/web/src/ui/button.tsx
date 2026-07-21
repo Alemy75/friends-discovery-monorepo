@@ -4,7 +4,7 @@ export function Button({ type = 'button', className = '', ...props }: ButtonHTML
   return (
     <button
       type={type}
-      className={`inline-flex items-center justify-center rounded-lg px-4 py-2 font-medium text-white bg-[#fb5d5d] hover:bg-[#ff8e72] disabled:opacity-50 ${className}`}
+      className={`inline-flex items-center justify-center rounded-pill px-4 py-2 font-geist font-medium text-white bg-accent hover:bg-accent-2 disabled:opacity-50 ${className}`}
       {...props}
     />
   );
