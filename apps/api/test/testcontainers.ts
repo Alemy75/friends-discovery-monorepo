@@ -41,3 +41,12 @@ export async function startRedis(): Promise<StartedRedis> {
     },
   };
 }
+
+/** Прогоняет `prisma db seed` против уже мигрированной тестовой БД. */
+export function seedTestDatabase(url: string): void {
+  execSync('npx prisma db seed', {
+    cwd: path.resolve(__dirname, '..'),
+    env: { ...process.env, DATABASE_URL: url },
+    stdio: 'inherit',
+  });
+}
