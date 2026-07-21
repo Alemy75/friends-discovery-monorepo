@@ -1,7 +1,10 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { App } from './App';
 
-it('renders the app placeholder', () => {
+afterEach(() => vi.restoreAllMocks());
+
+it('renders the shell and resolves to "not signed in" against a 401 backend', async () => {
+  vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 401 }));
   render(<App />);
-  expect(screen.getByText('friends.ai')).toBeInTheDocument();
+  await waitFor(() => expect(screen.getByText('Вы не вошли в систему.')).toBeInTheDocument());
 });
