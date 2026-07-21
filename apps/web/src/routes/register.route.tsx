@@ -75,7 +75,7 @@ export function RegisterScreen() {
             ref={errorRef}
             role="alert"
             tabIndex={-1}
-            className="animate-fade-in rounded-nested border border-ember/40 bg-accent-soft px-3 py-2 text-sm text-ember outline-none"
+            className="animate-fade-in rounded-nested border border-ember/40 bg-ember/10 px-3 py-2 text-sm text-ember outline-none"
           >
             {formError}
           </p>
