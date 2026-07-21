@@ -56,11 +56,11 @@ export function RegisterScreen() {
             <input type="checkbox" className="mt-1 h-4 w-4 shrink-0 accent-accent" {...register('consent')} />
             <span>
               Я принимаю{' '}
-              <Link to="/legal/privacy" className="text-ink font-medium underline underline-offset-2">
+              <Link to="/legal/privacy" target="_blank" rel="noopener noreferrer" className="text-ink font-medium underline underline-offset-2">
                 Политику обработки персональных данных
               </Link>{' '}
               и{' '}
-              <Link to="/legal/terms" className="text-ink font-medium underline underline-offset-2">
+              <Link to="/legal/terms" target="_blank" rel="noopener noreferrer" className="text-ink font-medium underline underline-offset-2">
                 Пользовательское соглашение
               </Link>{' '}
               и даю согласие на обработку персональных данных
