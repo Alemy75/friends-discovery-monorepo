@@ -31,12 +31,18 @@ task — never merge work straight to `main`.
 - Follow the `creating-pull-requests` skill in `.claude/skills/` for the full
   title/body template and workflow.
 
-### 3. English only
+### 3. English in the codebase
 
 All text and comments in the codebase must be written in **English** — code
 comments, commit messages, issue and PR titles/descriptions, documentation, log
 messages, and identifiers. This keeps the project consistent and reviewable by
-everyone.
+everyone. (This rule is about repo artifacts only — see rule 4 for chat.)
+
+### 4. Talk to the maintainer in Russian
+
+In conversation with the maintainer (chat, task discussions, questions, status
+updates), reply in **Russian**. This is separate from rule 3: repo artifacts stay
+in English, but the dialog with the maintainer is in Russian.
 
 ## Related
 
