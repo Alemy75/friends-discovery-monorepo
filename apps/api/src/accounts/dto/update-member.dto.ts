@@ -12,4 +12,8 @@ export class UpdateMemberDto {
   @Min(18)
   @Max(99)
   age?: number;
+
+  @IsOptional()
+  @IsString()
+  photoObjectKey?: string;
 }

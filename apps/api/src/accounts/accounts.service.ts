@@ -1,6 +1,7 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { AccountKind, MyAccountResponse } from '@friends-ai/contracts';
+import { AppConfigService } from '../config/config.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { ChangeKindDto } from './dto/change-kind.dto';
 import { CreateAccountDto } from './dto/create-account.dto';
@@ -10,7 +11,10 @@ import { ACCOUNT_INCLUDE, toMyAccountResponse } from './accounts.mapper';
 
 @Injectable()
 export class AccountsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly config: AppConfigService,
+  ) {}
 
   async createAccount(userId: string, dto: CreateAccountDto): Promise<MyAccountResponse> {
     const existing = await this.prisma.account.findUnique({ where: { ownerUserId: userId } });
@@ -111,6 +115,11 @@ export class AccountsService {
     const data: Prisma.AccountMemberUpdateInput = {};
     if (dto.name !== undefined) data.name = dto.name;
     if (dto.age !== undefined) data.age = dto.age;
+    if (dto.photoObjectKey !== undefined) {
+      const prefix = `accounts/${account.id}/`;
+      if (!dto.photoObjectKey.startsWith(prefix)) throw new BadRequestException('Object key outside account namespace');
+      data.photoUrl = `${this.config.s3PublicUrl}/${dto.photoObjectKey}`;
+    }
     if (Object.keys(data).length > 0) await this.prisma.accountMember.update({ where: { id: memberId }, data });
 
     return this.getMyAccount(userId);

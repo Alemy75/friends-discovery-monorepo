@@ -4,7 +4,8 @@ import { AccountsService } from './accounts.service';
 
 // Единая фабрика сервиса для всех describe-блоков этого файла (Tasks 5–8).
 // Task 9 меняет ТОЛЬКО эту строку (добавляет конфиг-стаб вторым аргументом).
-const newService = (prisma: any) => new AccountsService(prisma);
+const newService = (prisma: any) =>
+  new AccountsService(prisma, { s3PublicUrl: 'http://localhost:9000/friends-media' } as any);
 
 function makeDto(overrides: Partial<any> = {}) {
   return {
@@ -145,5 +146,17 @@ describe('AccountsService.updateMember', () => {
     } as any;
     const svc = newService(prisma);
     await expect(svc.updateMember('u1', 'other', { name: 'X' })).rejects.toBeInstanceOf(NotFoundException);
+  });
+});
+
+describe('AccountsService.updateMember photo attach', () => {
+  it('rejects an object key outside the account namespace', async () => {
+    const prisma = {
+      account: { findUnique: jest.fn().mockResolvedValue({ id: 'a1', members: [{ id: 'm0', position: 0 }] }) },
+    } as any;
+    const svc = newService(prisma);
+    await expect(
+      svc.updateMember('u1', 'm0', { photoObjectKey: 'accounts/OTHER/x.jpg' }),
+    ).rejects.toBeInstanceOf(BadRequestException);
   });
 });

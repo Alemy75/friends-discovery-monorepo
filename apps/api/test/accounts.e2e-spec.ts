@@ -156,4 +156,38 @@ describe('Accounts onboarding (e2e)', () => {
       .expect(200);
     expect(res.body.members[0]).toEqual(expect.objectContaining({ name: 'Аня', age: 28 }));
   });
+
+  it('mints a presigned upload url and attaches the photo to a member', async () => {
+    const token = await newUserToken();
+    const created = await request(app.getHttpServer())
+      .post('/api/v1/accounts').set('Authorization', `Bearer ${token}`)
+      .send({ kind: AccountKind.Single, cityId, members: [{ name: 'A', age: 30 }], interestSlugs: ['coffee', 'books'], intents: [Intent.Walks] })
+      .expect(201);
+    const memberId = created.body.members[0].id;
+
+    const presign = await request(app.getHttpServer())
+      .post('/api/v1/media/photo-upload-url').set('Authorization', `Bearer ${token}`)
+      .send({ contentType: 'image/jpeg', contentLength: 12345 })
+      .expect(200);
+    expect(presign.body.objectKey).toMatch(/^accounts\/[^/]+\/[a-f0-9-]+\.jpg$/);
+    expect(presign.body.uploadUrl).toContain('http');
+
+    const attached = await request(app.getHttpServer())
+      .patch(`/api/v1/accounts/me/members/${memberId}`).set('Authorization', `Bearer ${token}`)
+      .send({ photoObjectKey: presign.body.objectKey })
+      .expect(200);
+    expect(attached.body.members[0].photoUrl).toBe(presign.body.publicUrl);
+  });
+
+  it('rejects an unsupported photo content type (400)', async () => {
+    const token = await newUserToken();
+    await request(app.getHttpServer())
+      .post('/api/v1/accounts').set('Authorization', `Bearer ${token}`)
+      .send({ kind: AccountKind.Single, cityId, members: [{ name: 'A', age: 30 }], interestSlugs: ['coffee', 'books'], intents: [Intent.Walks] })
+      .expect(201);
+    await request(app.getHttpServer())
+      .post('/api/v1/media/photo-upload-url').set('Authorization', `Bearer ${token}`)
+      .send({ contentType: 'application/pdf', contentLength: 10 })
+      .expect(400);
+  });
 });
