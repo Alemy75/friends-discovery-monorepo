@@ -37,3 +37,11 @@ it('renders children when authenticated', async () => {
   renderWithProviders(tree(), { route: '/' });
   await waitFor(() => expect(screen.getByText('secret')).toBeInTheDocument());
 });
+
+it('shows a loading state while the auth check is pending', async () => {
+  vi.spyOn(globalThis, 'fetch').mockImplementation(() => new Promise(() => {}));
+  renderWithProviders(tree(), { route: '/' });
+  expect(await screen.findByText('Загрузка…')).toBeInTheDocument();
+  expect(screen.queryByText('secret')).not.toBeInTheDocument();
+  expect(screen.queryByText('login-screen')).not.toBeInTheDocument();
+});

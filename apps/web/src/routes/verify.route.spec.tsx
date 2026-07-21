@@ -65,6 +65,7 @@ it('shows a recovery message and a link to /login when verify succeeds but auto-
 });
 
 it('redirects to /register when there is no email in navigation state', async () => {
+  vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 404 }));
   renderWithProviders(
     <Routes>
       <Route path="/verify" element={<VerifyScreen />} />
@@ -73,4 +74,18 @@ it('redirects to /register when there is no email in navigation state', async ()
     { route: '/verify' },
   );
   await waitFor(() => expect(screen.getByText('register-screen')).toBeInTheDocument());
+});
+
+it('shows an invalid-code message on a 400 from verify-email and does not navigate away', async () => {
+  vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+    const url = String(input);
+    if (url.endsWith('/auth/verify-email')) return new Response(JSON.stringify({}), { status: 400 });
+    return new Response(null, { status: 404 });
+  });
+  renderWithProviders(tree(), { route: '/register-seed' });
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Подтвердить' })).toBeInTheDocument());
+  await userEvent.type(screen.getByLabelText('Код из письма'), '123456');
+  await userEvent.click(screen.getByRole('button', { name: 'Подтвердить' }));
+  await waitFor(() => expect(screen.getByText('Неверный или просроченный код')).toBeInTheDocument());
+  expect(screen.queryByText('home')).not.toBeInTheDocument();
 });
