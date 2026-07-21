@@ -57,7 +57,7 @@ mc cat "s3/$BACKUP_S3_BUCKET/backups/$OBJ" | gunzip -c \
 
 ```bash
 cp .env.prod.example .env
-sed -i '' 's|^DOMAIN=.*|DOMAIN=localhost|; s|^APP_URL=.*|APP_URL=https://localhost|' .env
+sed -i.bak 's|^DOMAIN=.*|DOMAIN=localhost|; s|^APP_URL=.*|APP_URL=https://localhost|' .env && rm -f .env.bak
 docker compose -f docker-compose.prod.yml up -d --build
 curl -k https://localhost/health
 ```
