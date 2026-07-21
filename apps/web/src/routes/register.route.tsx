@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, useNavigate } from 'react-router-dom';
@@ -13,11 +13,16 @@ export function RegisterScreen() {
   const { register: registerUser } = useAuth();
   const navigate = useNavigate();
   const [formError, setFormError] = useState<string | null>(null);
+  const errorRef = useRef<HTMLParagraphElement>(null);
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<RegisterValues>({ resolver: zodResolver(registerSchema) });
+
+  useEffect(() => {
+    if (formError) errorRef.current?.focus();
+  }, [formError]);
 
   const onSubmit = handleSubmit(async ({ email, password }) => {
     setFormError(null);
@@ -46,7 +51,11 @@ export function RegisterScreen() {
           <Input type="password" autoComplete="new-password" {...register('password')} />
           {errors.password ? <span className="text-xs text-ember">Минимум 8 символов</span> : null}
         </label>
-        {formError ? <p className="text-sm text-ember">{formError}</p> : null}
+        {formError ? (
+          <p ref={errorRef} role="alert" tabIndex={-1} className="text-sm text-ember outline-none">
+            {formError}
+          </p>
+        ) : null}
         <Button type="submit" className="mt-1 w-full" disabled={isSubmitting}>Продолжить</Button>
       </form>
     </AuthCard>
