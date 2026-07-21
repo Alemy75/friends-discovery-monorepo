@@ -13,6 +13,13 @@ export const envSchema = z.object({
   MAIL_FROM: z.string().default('no-reply@friends.local'),
   CAPTCHA_ENABLED: z.preprocess((v) => v === true || v === 'true', z.boolean()).default(false),
   CAPTCHA_SECRET: z.string().optional(),
+  S3_ENDPOINT: z.string().url().default('http://localhost:9000'),
+  S3_REGION: z.string().default('us-east-1'),
+  S3_BUCKET: z.string().default('friends-media'),
+  S3_ACCESS_KEY: z.string().default('minio'),
+  S3_SECRET_KEY: z.string().default('changeme123'),
+  S3_PUBLIC_URL: z.string().url().default('http://localhost:9000/friends-media'),
+  S3_UPLOAD_MAX_BYTES: z.coerce.number().int().positive().default(5 * 1024 * 1024),
 });
 
 export type Env = z.infer<typeof envSchema>;

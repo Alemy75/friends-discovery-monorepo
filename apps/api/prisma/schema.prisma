@@ -16,6 +16,7 @@ model City {
   centerLng Float
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
+  accounts  Account[]
 
   @@map("cities")
 }
@@ -42,6 +43,7 @@ model User {
   createdAt  DateTime      @default(now())
   updatedAt  DateTime      @updatedAt
   identities AuthIdentity[]
+  account    Account?
 
   @@map("users")
 }
@@ -59,4 +61,68 @@ model AuthIdentity {
   @@unique([provider, identifier])
   @@index([userId])
   @@map("auth_identities")
+}
+
+enum AccountKind {
+  single
+  couple
+}
+
+enum ProfileStatus {
+  active
+  hidden
+  banned
+}
+
+model Account {
+  id           String        @id @default(cuid())
+  ownerUserId  String        @unique
+  owner        User          @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  kind         AccountKind
+  cityId       String
+  city         City          @relation(fields: [cityId], references: [id])
+  bio          String?
+  status       ProfileStatus @default(active)
+  intents      String[]
+  lastActiveAt DateTime      @default(now())
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  members      AccountMember[]
+  interests    AccountInterest[]
+
+  @@index([cityId, status])
+  @@map("accounts")
+}
+
+model AccountMember {
+  id        String  @id @default(cuid())
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  position  Int
+  name      String
+  age       Int
+  photoUrl  String?
+
+  @@unique([accountId, position])
+  @@map("account_members")
+}
+
+model Interest {
+  id       String  @id @default(cuid())
+  slug     String  @unique
+  label    String
+  isActive Boolean @default(true)
+  accounts AccountInterest[]
+
+  @@map("interests")
+}
+
+model AccountInterest {
+  accountId  String
+  interestId String
+  account    Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  interest   Interest @relation(fields: [interestId], references: [id])
+
+  @@id([accountId, interestId])
+  @@map("account_interests")
 }

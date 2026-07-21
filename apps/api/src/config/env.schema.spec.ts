@@ -61,3 +61,17 @@ describe('validateEnv', () => {
     ).toThrow(/JWT_SECRET/);
   });
 });
+
+describe('env S3 defaults', () => {
+  const base = {
+    DATABASE_URL: 'postgresql://u:p@localhost:5432/db',
+    REDIS_URL: 'redis://localhost:6379',
+    JWT_SECRET: 'x'.repeat(32),
+    APP_URL: 'http://localhost:5173',
+  };
+  it('applies dev S3 defaults so AppModule boots without S3 env', () => {
+    const env = validateEnv({ ...base });
+    expect(env.S3_BUCKET).toBe('friends-media');
+    expect(env.S3_UPLOAD_MAX_BYTES).toBe(5 * 1024 * 1024);
+  });
+});

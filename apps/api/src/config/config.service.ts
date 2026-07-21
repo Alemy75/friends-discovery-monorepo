@@ -42,4 +42,25 @@ export class AppConfigService {
   get captchaSecret(): string | undefined {
     return this.config.get('CAPTCHA_SECRET', { infer: true });
   }
+  get s3Endpoint(): string {
+    return this.config.get('S3_ENDPOINT', { infer: true });
+  }
+  get s3Region(): string {
+    return this.config.get('S3_REGION', { infer: true });
+  }
+  get s3Bucket(): string {
+    return this.config.get('S3_BUCKET', { infer: true });
+  }
+  get s3AccessKey(): string {
+    return this.config.get('S3_ACCESS_KEY', { infer: true });
+  }
+  get s3SecretKey(): string {
+    return this.config.get('S3_SECRET_KEY', { infer: true });
+  }
+  get s3PublicUrl(): string {
+    return this.config.get('S3_PUBLIC_URL', { infer: true });
+  }
+  get s3UploadMaxBytes(): number {
+    return this.config.get('S3_UPLOAD_MAX_BYTES', { infer: true });
+  }
 }

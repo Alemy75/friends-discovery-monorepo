@@ -9,6 +9,9 @@ import { RedisModule } from './redis/redis.module';
 import { HealthModule } from './health/health.module';
 import { MailModule } from './mail/mail.module';
 import { AuthModule } from './auth/auth.module';
+import { CatalogModule } from './catalog/catalog.module';
+import { AccountsModule } from './accounts/accounts.module';
+import { MediaModule } from './media/media.module';
 import { PrismaExceptionFilter } from './common/prisma-exception.filter';
 
 @Module({
@@ -19,6 +22,9 @@ import { PrismaExceptionFilter } from './common/prisma-exception.filter';
     HealthModule,
     MailModule,
     AuthModule,
+    CatalogModule,
+    AccountsModule,
+    MediaModule,
     ThrottlerModule.forRootAsync({
       inject: [AppConfigService],
       useFactory: (c: AppConfigService) => ({
