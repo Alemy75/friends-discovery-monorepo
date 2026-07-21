@@ -5,6 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { ChangeKindDto } from './dto/change-kind.dto';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
+import { UpdateMemberDto } from './dto/update-member.dto';
 import { ACCOUNT_INCLUDE, toMyAccountResponse } from './accounts.mapper';
 
 @Injectable()
@@ -98,6 +99,19 @@ export class AccountsService {
       }
       await tx.account.update({ where: { id: account.id }, data: { kind: dto.kind } });
     });
+
+    return this.getMyAccount(userId);
+  }
+
+  async updateMember(userId: string, memberId: string, dto: UpdateMemberDto): Promise<MyAccountResponse> {
+    const account = await this.requireOwnAccount(userId);
+    const member = account.members.find((m) => m.id === memberId);
+    if (!member) throw new NotFoundException('Member not found');
+
+    const data: Prisma.AccountMemberUpdateInput = {};
+    if (dto.name !== undefined) data.name = dto.name;
+    if (dto.age !== undefined) data.age = dto.age;
+    if (Object.keys(data).length > 0) await this.prisma.accountMember.update({ where: { id: memberId }, data });
 
     return this.getMyAccount(userId);
   }

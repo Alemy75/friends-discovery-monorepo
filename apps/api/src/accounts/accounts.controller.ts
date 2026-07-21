@@ -1,10 +1,11 @@
-import { Body, Controller, Get, HttpCode, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, Patch, Post } from '@nestjs/common';
 import { MyAccountResponse } from '@friends-ai/contracts';
 import { CurrentUser, AuthUser } from '../auth/decorators/current-user.decorator';
 import { AccountsService } from './accounts.service';
 import { ChangeKindDto } from './dto/change-kind.dto';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
+import { UpdateMemberDto } from './dto/update-member.dto';
 
 @Controller('accounts')
 export class AccountsController {
@@ -29,5 +30,14 @@ export class AccountsController {
   @Patch('me/kind')
   changeKind(@CurrentUser() user: AuthUser, @Body() dto: ChangeKindDto): Promise<MyAccountResponse> {
     return this.accounts.changeKind(user.id, dto);
+  }
+
+  @Patch('me/members/:id')
+  updateMember(
+    @CurrentUser() user: AuthUser,
+    @Param('id') memberId: string,
+    @Body() dto: UpdateMemberDto,
+  ): Promise<MyAccountResponse> {
+    return this.accounts.updateMember(user.id, memberId, dto);
   }
 }

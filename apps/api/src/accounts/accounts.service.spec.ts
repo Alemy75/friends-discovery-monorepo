@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException } from '@nestjs/common';
+import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
 import { AccountKind, Intent } from '@friends-ai/contracts';
 import { AccountsService } from './accounts.service';
 
@@ -119,5 +119,31 @@ describe('AccountsService.changeKind', () => {
     } as any;
     const svc = newService(prisma);
     await expect(svc.changeKind('u1', { kind: AccountKind.Single })).rejects.toBeInstanceOf(BadRequestException);
+  });
+});
+
+describe('AccountsService.updateMember', () => {
+  it('updates name/age of an owned member', async () => {
+    const prisma = {
+      account: {
+        findUnique: jest.fn()
+          .mockResolvedValueOnce({ id: 'a1', members: [{ id: 'm0', position: 0 }] })
+          .mockResolvedValueOnce({ id: 'a1', kind: 'single', city: { id: 'c', slug: 's', name: 'n', timezone: 't' }, members: [], interests: [], intents: [], bio: null, status: 'active', lastActiveAt: new Date() }),
+      },
+      accountMember: { update: jest.fn().mockResolvedValue({}) },
+    } as any;
+    const svc = newService(prisma);
+
+    await svc.updateMember('u1', 'm0', { name: 'New', age: 31 });
+
+    expect(prisma.accountMember.update).toHaveBeenCalledWith({ where: { id: 'm0' }, data: { name: 'New', age: 31 } });
+  });
+
+  it('throws NotFound for a member not on the user account', async () => {
+    const prisma = {
+      account: { findUnique: jest.fn().mockResolvedValue({ id: 'a1', members: [{ id: 'm0', position: 0 }] }) },
+    } as any;
+    const svc = newService(prisma);
+    await expect(svc.updateMember('u1', 'other', { name: 'X' })).rejects.toBeInstanceOf(NotFoundException);
   });
 });

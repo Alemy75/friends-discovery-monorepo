@@ -141,4 +141,19 @@ describe('Accounts onboarding (e2e)', () => {
     expect(toSingle.body.kind).toBe('single');
     expect(toSingle.body.members).toHaveLength(1);
   });
+
+  it('edits a member name/age via PATCH /accounts/me/members/:id', async () => {
+    const token = await newUserToken();
+    const created = await request(app.getHttpServer())
+      .post('/api/v1/accounts').set('Authorization', `Bearer ${token}`)
+      .send({ kind: AccountKind.Single, cityId, members: [{ name: 'A', age: 30 }], interestSlugs: ['coffee', 'books'], intents: [Intent.Walks] })
+      .expect(201);
+    const memberId = created.body.members[0].id;
+
+    const res = await request(app.getHttpServer())
+      .patch(`/api/v1/accounts/me/members/${memberId}`).set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Аня', age: 28 })
+      .expect(200);
+    expect(res.body.members[0]).toEqual(expect.objectContaining({ name: 'Аня', age: 28 }));
+  });
 });
