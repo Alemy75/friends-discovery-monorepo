@@ -52,15 +52,15 @@ export function RegisterScreen() {
           {errors.password ? <span className="text-xs text-ember">Минимум 8 символов</span> : null}
         </label>
         <div className="flex flex-col gap-1">
-          <label className="flex items-start gap-2 text-sm font-geist text-mid-gray">
-            <input type="checkbox" className="mt-1 h-4 w-4 shrink-0 accent-accent" {...register('consent')} />
+          <label className="flex items-center gap-2 text-sm font-geist text-mid-gray">
+            <input type="checkbox" className="h-4 w-4 shrink-0 accent-accent" {...register('consent')} />
             <span>
               Я принимаю{' '}
-              <Link to="/legal/privacy" target="_blank" rel="noopener noreferrer" className="text-ink font-medium underline underline-offset-2">
+              <Link to="/legal/privacy" target="_blank" rel="noopener noreferrer" className="text-ink underline underline-offset-2">
                 Политику обработки персональных данных
               </Link>{' '}
               и{' '}
-              <Link to="/legal/terms" target="_blank" rel="noopener noreferrer" className="text-ink font-medium underline underline-offset-2">
+              <Link to="/legal/terms" target="_blank" rel="noopener noreferrer" className="text-ink underline underline-offset-2">
                 Пользовательское соглашение
               </Link>{' '}
               и даю согласие на обработку персональных данных
@@ -71,7 +71,12 @@ export function RegisterScreen() {
           ) : null}
         </div>
         {formError ? (
-          <p ref={errorRef} role="alert" tabIndex={-1} className="text-sm text-ember outline-none">
+          <p
+            ref={errorRef}
+            role="alert"
+            tabIndex={-1}
+            className="animate-fade-in rounded-nested border border-ember/40 bg-accent-soft px-3 py-2 text-sm text-ember outline-none"
+          >
             {formError}
           </p>
         ) : null}
