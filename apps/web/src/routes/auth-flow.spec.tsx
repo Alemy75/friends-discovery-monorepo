@@ -39,6 +39,7 @@ it('register → verify → auto-login → home', async () => {
 
   await userEvent.type(screen.getByLabelText('Email'), 'a@b.com');
   await userEvent.type(screen.getByLabelText('Пароль'), 'password123');
+  await userEvent.click(screen.getByRole('checkbox'));
   await userEvent.click(screen.getByRole('button', { name: 'Продолжить' }));
 
   await waitFor(() => expect(screen.getByRole('button', { name: 'Подтвердить' })).toBeInTheDocument());

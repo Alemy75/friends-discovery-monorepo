@@ -51,6 +51,25 @@ export function RegisterScreen() {
           <Input type="password" autoComplete="new-password" {...register('password')} />
           {errors.password ? <span className="text-xs text-ember">Минимум 8 символов</span> : null}
         </label>
+        <div className="flex flex-col gap-1">
+          <label className="flex items-start gap-2 text-sm font-geist text-mid-gray">
+            <input type="checkbox" className="mt-1 h-4 w-4 shrink-0 accent-accent" {...register('consent')} />
+            <span>
+              Я принимаю{' '}
+              <Link to="/legal/privacy" className="text-ink font-medium underline underline-offset-2">
+                Политику обработки персональных данных
+              </Link>{' '}
+              и{' '}
+              <Link to="/legal/terms" className="text-ink font-medium underline underline-offset-2">
+                Пользовательское соглашение
+              </Link>{' '}
+              и даю согласие на обработку персональных данных
+            </span>
+          </label>
+          {errors.consent ? (
+            <span className="text-xs text-ember">Необходимо согласие на обработку персональных данных</span>
+          ) : null}
+        </div>
         {formError ? (
           <p ref={errorRef} role="alert" tabIndex={-1} className="text-sm text-ember outline-none">
             {formError}

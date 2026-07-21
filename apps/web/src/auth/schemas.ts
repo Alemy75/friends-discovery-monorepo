@@ -3,6 +3,7 @@ import { z } from 'zod';
 export const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
+  consent: z.literal(true),
 });
 export const codeSchema = z.object({ code: z.string().length(6) });
 export const loginSchema = z.object({
