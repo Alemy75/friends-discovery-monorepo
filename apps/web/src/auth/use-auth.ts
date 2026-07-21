@@ -23,11 +23,23 @@ export function useAuth() {
     onSuccess: () => qc.setQueryData(['me'], null),
   });
 
+  const registerMutation = useMutation({
+    mutationFn: ({ email, password }: { email: string; password: string }) =>
+      authService.register(email, password),
+  });
+
+  const verifyMutation = useMutation({
+    mutationFn: ({ email, code }: { email: string; code: string }) =>
+      authService.verifyEmail(email, code),
+  });
+
   return {
     user: meQuery.data ?? undefined,
     isLoading: meQuery.isLoading,
     isAuthenticated: !!meQuery.data,
     login: (email: string, password: string) => loginMutation.mutateAsync({ email, password }),
     logout: () => logoutMutation.mutateAsync(),
+    register: (email: string, password: string) => registerMutation.mutateAsync({ email, password }),
+    verifyEmail: (email: string, code: string) => verifyMutation.mutateAsync({ email, code }),
   };
 }
